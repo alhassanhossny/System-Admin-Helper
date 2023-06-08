@@ -13,7 +13,7 @@ System Admin Helper is a Bash Program for dealing with Linux Administration comm
 
     $ sudo su  
 # or
-    $ su -  to get the root permission.
+    $ su -                            # to get the root permission.
 
 2- run :
 
