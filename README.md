@@ -9,12 +9,18 @@ System Admin Helper is a Bash Program for dealing with Linux Administration comm
 
 ## Usage
 
-1- Open Scripts folder in terminal and run : $ sudo su  or   $ su -  to get the root permission.
+1- Open Scripts folder in terminal and run :
+
+    $ sudo su  
+# or
+    $ su -  to get the root permission.
 
 2- run :
-    $ chmod +x *.sh    to make all bash files excutable.
 
+    $ chmod +x *.sh                   # to make all bash files excutable.
+    
 3- run :
-    $ ./main.sh  or $ bash main.sh
 
+    $ ./main.sh  or $ bash main.sh    # to make all bash files excutable.
+    
 # Enjoy your experience .
