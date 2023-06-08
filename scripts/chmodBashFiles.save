@@ -1,0 +1,16 @@
+chmod +x about.sh 
+chmod +x addgrp-menu.sh 
+chmod +x adduser-menu.sh 
+chmod +x chpass-menu.sh 
+chmod +x delgrp-menu.sh 
+  130  chmod +x deluser-menu.sh 
+  131  chmod +x disuser-menu.sh 
+  132  chmod +x enuser-menu.sh 
+  133  chmod +x exit-menu.sh 
+  134  chmod +x func.sh 
+  135  chmod +x listgrp-menu.sh 
+  136  chmod +x listuser-menu.sh 
+  137  chmod +x main.sh 
+  138  chmod +x main-menu.sh 
+  139  chmod +x modgrp-menu.sh 
+  140  chmod +x moduser-menu.sh
