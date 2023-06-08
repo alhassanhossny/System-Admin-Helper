@@ -17,10 +17,14 @@ System Admin Helper is a Bash Program for dealing with Linux Administration comm
 
 2- run :
 
-    $ chmod +x *.sh                   # to make all bash files excutable.
+    $ chmod +x *.sh                   
+### to make all bash files excutable.
     
 3- run :
 
-    $ ./main.sh  or $ bash main.sh    # to make all bash files excutable.
+    $ ./main.sh  
+### or 
+    $ bash main.sh    
+### to Run the program.
     
 # Enjoy your experience .
