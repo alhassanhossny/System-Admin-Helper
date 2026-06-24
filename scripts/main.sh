@@ -25,7 +25,7 @@ install_hint() {
 }
 
 missing_commands() {
-	local required=(awk chage chpasswd cut date getent grep groupadd groupdel groupmod id passwd useradd userdel usermod whiptail)
+	local required=(awk bash chage chpasswd cut date getent grep groupadd groupdel groupmod id passwd useradd userdel usermod whiptail)
 	local missing=()
 	local command_name
 
@@ -56,7 +56,8 @@ $(install_hint)"
 	exit 1
 fi
 
-touch "$LOG_FILE" 2>/dev/null || {
+mkdir -p "$LOG_DIR" "$BACKUP_DIR"
+touch "$LOG_FILE" "$AUDIT_LOG_FILE" 2>/dev/null || {
 	show_message "Log Error" "Unable to write log file: $LOG_FILE"
 	exit 1
 }
@@ -64,6 +65,13 @@ touch "$LOG_FILE" 2>/dev/null || {
 resize_window
 
 if (whiptail --title "System Admin Helper" --yesno "Start the program?" 8 78); then
+    if whiptail --title "Dry Run" --defaultno --yesno "Enable dry-run mode for this session?\n\nDry-run mode previews and audits commands without changing system users or groups." 10 78; then
+        export SAH_DRY_RUN=1
+        audit_log "session" "main" "dry-run" "start session"
+    else
+        export SAH_DRY_RUN="${SAH_DRY_RUN:-0}"
+        audit_log "session" "main" "started" "start session"
+    fi
     ## Start the program with the first (main) menu.
     ./main-menu.sh; exit
 else

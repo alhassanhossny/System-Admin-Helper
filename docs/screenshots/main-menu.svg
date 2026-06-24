@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="470" viewBox="0 0 820 470" role="img" aria-label="System Admin Helper main menu">
+  <rect width="820" height="470" fill="#101820"/>
+  <rect x="80" y="42" width="660" height="386" rx="8" fill="#f4f7fb" stroke="#7a8a99" stroke-width="2"/>
+  <rect x="80" y="42" width="660" height="42" rx="8" fill="#1f6f78"/>
+  <text x="410" y="69" text-anchor="middle" font-family="monospace" font-size="18" fill="#ffffff">System Admin Helper - Main Menu</text>
+  <text x="128" y="126" font-family="monospace" font-size="17" fill="#15202b">Choose an option</text>
+  <g font-family="monospace" font-size="15" fill="#15202b">
+    <text x="140" y="170">Add User          Add a user to the system.</text>
+    <text x="140" y="202">Modify User       Modify an existing user.</text>
+    <text x="140" y="234">Delete User       Delete an existing user.</text>
+    <text x="140" y="266">List Users        List all users on the system.</text>
+    <text x="140" y="298">Add Group         Add a user group to the system.</text>
+    <text x="140" y="330">Disable User      Lock the user account.</text>
+    <text x="140" y="362">Change Password   Change password of a user.</text>
+  </g>
+  <rect x="312" y="388" width="86" height="30" rx="4" fill="#1f6f78"/>
+  <rect x="420" y="388" width="86" height="30" rx="4" fill="#586a7a"/>
+  <text x="355" y="408" text-anchor="middle" font-family="monospace" font-size="14" fill="#fff">Select</text>
+  <text x="463" y="408" text-anchor="middle" font-family="monospace" font-size="14" fill="#fff">Exit</text>
+</svg>

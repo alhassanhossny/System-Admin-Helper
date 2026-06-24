@@ -2,18 +2,28 @@
 
 System Admin Helper is a Bash/whiptail menu application for common Linux user and group administration tasks.
 
+![Main menu](docs/screenshots/main-menu.svg)
+
 ## Features
 
 - Add, modify, delete, list, enable, and disable users.
 - Add, modify, delete, and list groups.
-- Change user passwords.
-- Root/dependency checks before privileged actions run.
-- Portable launcher that works from the repository root or from the `scripts/` directory.
-- Logs command output to `scripts/logs` during local runs.
+- Change user passwords with `passwd --stdin` or `chpasswd`, depending on distro support.
+- Dry-run mode for previewing privileged commands without changing the system.
+- Command preview and confirmation before privileged actions run.
+- JSON-lines audit log for admin, target, action, status, dry-run state, and command.
+- Backup prompts before destructive user/group delete actions.
+- Restore utility for account database backups.
+- Runtime compatibility checks for optional flags such as `userdel -Z`, `groupadd -U`, and `groupmod -U`.
+- Install/uninstall scripts and Makefile targets for release packaging.
+
+## Screenshots
+
+![Dry-run preview](docs/screenshots/dry-run-preview.svg)
 
 ## Requirements
 
-Run on a Linux system with root privileges and the standard shadow user-management tools.
+Run on a Linux system with root privileges and standard shadow user-management tools.
 
 Fedora/RHEL:
 
@@ -33,7 +43,7 @@ openSUSE:
 sudo zypper install newt xterm shadow
 ```
 
-`resize` is optional. If it is unavailable, the app falls back to the terminal dimensions reported by `tput`.
+`resize` is optional. If it is unavailable, the app falls back to terminal dimensions reported by `tput`.
 
 ## Usage
 
@@ -50,14 +60,104 @@ cd scripts
 sudo ./main.sh
 ```
 
-The launcher validates privileges and dependencies before opening the main menu. It no longer installs packages automatically.
+The launcher validates privileges and dependencies before opening the main menu. It does not install packages automatically.
+
+## Dry-Run Mode
+
+The launcher asks whether to enable dry-run mode for the current session. You can also force it from the shell:
+
+```bash
+sudo SAH_DRY_RUN=1 ./scripts/main.sh
+```
+
+Dry-run mode previews and audits commands without applying system changes.
+
+## Audit And Logs
+
+Runtime files are written under `scripts/logs/` by default:
+
+- `commands.log`: command stdout/stderr.
+- `audit.log`: JSON-lines audit records.
+- `backups/`: account database backups.
+
+Override locations if needed:
+
+```bash
+sudo SAH_LOG_DIR=/var/log/system-admin-helper ./scripts/main.sh
+```
+
+## Backups And Restore
+
+Before destructive delete actions, the app prompts to back up:
+
+- `/etc/passwd`
+- `/etc/group`
+- `/etc/shadow`
+- `/etc/gshadow`
+
+Restore a backup deliberately with:
+
+```bash
+sudo ./scripts/restore-backup.sh scripts/logs/backups/YYYYMMDD-HHMMSS-label
+```
+
+For non-interactive restore automation:
+
+```bash
+sudo SAH_ASSUME_YES=1 ./scripts/restore-backup.sh /path/to/backup
+```
+
+## Install
+
+Install a system launcher:
+
+```bash
+sudo make install
+```
+
+Default paths:
+
+- Scripts: `/usr/local/lib/system-admin-helper`
+- Launcher: `/usr/local/sbin/system-admin-helper`
+
+Custom prefix:
+
+```bash
+sudo make install PREFIX=/opt/system-admin-helper
+```
+
+Uninstall:
+
+```bash
+sudo make uninstall
+```
 
 ## Development Checks
 
-Run Bash syntax checks:
+Run syntax checks:
 
 ```bash
-for file in scripts/*.sh; do bash -n "$file" || exit 1; done
+make syntax
+```
+
+Run the test runner:
+
+```bash
+make test
+```
+
+If Bats is installed, `make test` runs `test/*.bats`. If Bats is unavailable, the runner still performs Bash syntax checks and reports that Bats tests were skipped.
+
+Install Bats on Fedora/RHEL:
+
+```bash
+sudo dnf install bats
+```
+
+Install Bats on Debian/Ubuntu:
+
+```bash
+sudo apt-get install bats
 ```
 
 Run a non-root smoke test:

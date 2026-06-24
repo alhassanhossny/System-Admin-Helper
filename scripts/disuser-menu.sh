@@ -26,10 +26,12 @@ if ! (whiptail --title "Disable User (${username})" --yesno "Are you sure you wa
 	./main-menu.sh; exit
 fi
 
-usermod -L -e 1 "${username}" >>"$LOG_FILE" 2>&1
+run_admin_command "disable_user" "$username" usermod -L -e 1 "$username"
 
 check=$(passwd --status "${username}" | awk '{if ($2 == "LK") {print "locked"}}')
-if [ "${check}" ]; then
+if is_dry_run; then
+	output="Dry run: User ($username) disable was previewed."
+elif [ "${check}" ]; then
 	output="User ($username) has been disabled successfully."
 else output="User ($username) has not been disabled."; fi
 whiptail --title "Output" --msgbox "${output}" 8 79

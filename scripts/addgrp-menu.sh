@@ -49,13 +49,20 @@ for i in "${!options[@]}"; do
 	else strings[$i]="${base_strings[$i]}"; fi
 done
 
-## Menu of user creation options.
+## Menu of group creation options.
+group_menu_options=(
+	"Create" "${strings[0]}"
+	"GID" "${strings[1]}"
+)
+
+if command_supports_option groupadd "-U"; then
+	group_menu_options+=("Users" "${strings[2]}")
+fi
+
 opt=$(whiptail --title "New Group Options - group: ${group}" --ok-button "Edit" \
 --menu "Select an option:" \
 $LINES $COLUMNS $(( $LINES - 8 )) \
-"Create" "${strings[0]}" \
-"GID" "${strings[1]}" \
-"Users" "${strings[2]}" \
+"${group_menu_options[@]}" \
 3>&1 1>&2 2>&3)
 
 if [ $? != 0 ]; then ./main-menu.sh; exit; fi
@@ -74,14 +81,16 @@ case $opt in
 		done
 
 		command_args+=("${group}")
-		"${command_args[@]}" >>"$LOG_FILE" 2>&1
+		run_admin_command "create_group" "$group" "${command_args[@]}"
 
-		if group_exists "${group}"; then
+		if group_exists "${group}" || is_dry_run; then
 			check="${group}"
 		else
 			check=""
 		fi
-		if [ "${check}" ];then
+		if is_dry_run; then
+			output="Dry run: Group ($group) creation was previewed."
+		elif [ "${check}" ];then
 			output="Group ($group) has been created successfully."
 		else output="Group ($group) has not been created."; fi
 		whiptail --title "Output" --msgbox "${output}" 8 79
@@ -102,6 +111,10 @@ case $opt in
 		source ./addgrp-menu.sh; exit ;;
 ########################################################################################################################
 	"Users")	# Option 2
+		if ! command_supports_option groupadd "-U"; then
+			whiptail --title "Unsupported Option" --msgbox "This system's groupadd command does not support the -U users option." 8 79
+			source ./addgrp-menu.sh; exit
+		fi
 		if [ "${options[2]}" == "-" ]; then options[2]=""; fi
 		while true; do
 			options[2]=$(whiptail --inputbox "Enter the Users (Comma Separated):" 8 $(( $COLUMNS - 10 )) "${options[2]}" \

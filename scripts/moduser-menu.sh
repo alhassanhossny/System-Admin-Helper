@@ -123,17 +123,19 @@ case $opt in
 
         if [ ${#command_args[@]} -gt 1 ] && [ "${check}" ]; then
             command_args+=("${username}")
-            "${command_args[@]}" >>"$LOG_FILE" 2>&1
+            run_admin_command "modify_user" "$username" "${command_args[@]}"
         fi
         if [ "${options[12]}" != "-" ] && [ "${check}" ]; then
             set_user_password "${username}" "${options[12]}"
         fi
         if [ "${options[7]}" != "-" ] && [ "${check}" ]; then
-            usermod "${arg[7]}" "${options[7]}" "${username}" >>"$LOG_FILE" 2>&1
+            run_admin_command "rename_user" "$username" usermod "${arg[7]}" "${options[7]}" "${username}"
             username="${options[7]}"
         fi
 
-        if user_exists "${username}"; then
+        if is_dry_run; then
+            output="Dry run: User ($username) modification was previewed."
+        elif user_exists "${username}"; then
             output="NOT SURE: User ($username) has been modified successfully."
         else output="NOT SURE: User ($username) has not been modified." ; fi
         whiptail --title "Output" --msgbox "${output}" 8 79

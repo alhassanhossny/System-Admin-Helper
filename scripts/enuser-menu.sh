@@ -26,17 +26,21 @@ if ! (whiptail --title "Enable User (${username})" --yesno "Are you sure you wan
     ./main-menu.sh; exit
 fi
 
-usermod -U "${username}" >>"$LOG_FILE" 2>&1
-usermod -e -1 "${username}" >>"$LOG_FILE" 2>&1
+run_admin_command "unlock_user_password" "$username" usermod -U "$username"
+run_admin_command "enable_user_account" "$username" usermod -e -1 "$username"
 
 check1=$(chage -l "${username}" | grep 'Account expires' | grep "never")
 check2=$(passwd --status "${username}" | awk '{if ($2 == "LK") {print "locked"}}')
 
-if [ "${check1}" ]; then
+if is_dry_run; then
+    output="Dry run: User ($username) enable was previewed."
+elif [ "${check1}" ]; then
     output="User ($username) account has been enabled successfully."
 else output="User ($username) account has not been enabled."; fi
 
-if [ "${check2}" ]; then
+if is_dry_run; then
+    output="${output}\nNo system changes were made."
+elif [ "${check2}" ]; then
     output="${output}\nUser ($username) password has not been enabled. Make sure to set a password before unlock it."
 else output="${output}\nUser ($username) password has been enabled successfully."; fi
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="360" viewBox="0 0 820 360" role="img" aria-label="Dry-run command preview dialog">
+  <rect width="820" height="360" fill="#101820"/>
+  <rect x="90" y="55" width="640" height="250" rx="8" fill="#f8fafc" stroke="#7a8a99" stroke-width="2"/>
+  <rect x="90" y="55" width="640" height="42" rx="8" fill="#7a4d00"/>
+  <text x="410" y="82" text-anchor="middle" font-family="monospace" font-size="18" fill="#ffffff">Dry Run</text>
+  <text x="132" y="132" font-family="monospace" font-size="16" fill="#15202b">No system changes will be made.</text>
+  <text x="132" y="174" font-family="monospace" font-size="16" fill="#15202b">Command:</text>
+  <rect x="132" y="194" width="556" height="42" rx="4" fill="#16212b"/>
+  <text x="152" y="221" font-family="monospace" font-size="15" fill="#d9f99d">useradd -c Demo\ User demo_user</text>
+  <rect x="368" y="260" width="84" height="30" rx="4" fill="#1f6f78"/>
+  <text x="410" y="280" text-anchor="middle" font-family="monospace" font-size="14" fill="#fff">OK</text>
+</svg>

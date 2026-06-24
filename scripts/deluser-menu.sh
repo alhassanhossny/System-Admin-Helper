@@ -23,13 +23,20 @@ while true; do
     fi
 done
 
+delete_menu_options=(
+    "Remove" "Files in the user's home directory will be removed." ON
+    "Force" "This option forces the removal of the user account." OFF
+)
+
+if command_supports_option userdel "-Z"; then
+    delete_menu_options+=("SELinux" "Remove any SELinux user mapping for the user's login." OFF)
+fi
+
 options=$(whiptail --title "Delete User Options (${username})" --checklist \
 "Select options: [Space] to check/uncheck, [Enter] to apply, [TAB] to cancel." \
 $(( $LINES - 2 )) 80 $(( $LINES - 8 )) \
-"Remove" "Files in the user's home directory will be removed." ON \
-"Force" "This option forces the removal of the user account." OFF \
-"SELinux" "Remove any SELinux user mapping for the user's login." OFF \
- 3>&1 1>&2 2>&3)
+"${delete_menu_options[@]}" \
+3>&1 1>&2 2>&3)
  
  if [ $? != 0 ]; then ./main-menu.sh; exit; fi
  
@@ -50,10 +57,13 @@ if ! (whiptail --title "Delete User (${username})" --yesno "Again, Are you sure 
     ./main-menu.sh; exit
 fi
 
+prompt_account_backup "deleting user ${username}"
 command_args+=("${username}")
-"${command_args[@]}" >>"$LOG_FILE" 2>&1
+run_admin_command "delete_user" "$username" "${command_args[@]}"
 
-if user_exists "${username}"; then
+if is_dry_run; then
+    output="Dry run: User ($username) deletion was previewed."
+elif user_exists "${username}"; then
     output="User ($username) has not been deleted."
 else output="User ($username) has been deleted successfully."; fi
 whiptail --title "Output" --msgbox "${output}" 8 79

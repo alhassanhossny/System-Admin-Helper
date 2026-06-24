@@ -30,9 +30,12 @@ if ! (whiptail --title "Delete Group (${group})" --yesno "Again, Are you sure yo
     ./main-menu.sh; exit
 fi
 
-groupdel "${group}" >>"$LOG_FILE" 2>&1
+prompt_account_backup "deleting group ${group}"
+run_admin_command "delete_group" "$group" groupdel "$group"
 
-if group_exists "${group}"; then
+if is_dry_run; then
+    output="Dry run: Group ($group) deletion was previewed."
+elif group_exists "${group}"; then
     output="Group ($group) has not been deleted, make sure that this group is not the primary group of any user."
 else output="Group ($group) has been deleted successfully."; fi
 whiptail --title "Output" --msgbox "${output}" 8 79

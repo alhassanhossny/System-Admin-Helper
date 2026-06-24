@@ -45,14 +45,21 @@ for i in "${!options[@]}"; do
     else strings[$i]="${base_strings[$i]}"; fi
 done
 
-## Menu of user creation options.
+## Menu of group modification options.
+group_menu_options=(
+    "Modify" "${strings[0]}"
+    "GID" "${strings[1]}"
+    "New Name" "${strings[2]}"
+)
+
+if command_supports_option groupmod "-U"; then
+    group_menu_options+=("Users" "${strings[3]}")
+fi
+
 opt=$(whiptail --title "Modify Group Options (${group})" --ok-button "Edit" \
 --menu "Select an option:" \
 $LINES $COLUMNS $(( $LINES - 8 )) \
-"Modify" "${strings[0]}" \
-"GID" "${strings[1]}" \
-"New Name" "${strings[2]}" \
-"Users" "${strings[3]}" \
+"${group_menu_options[@]}" \
 3>&1 1>&2 2>&3)
 
 if [ $? != 0 ]; then ./main-menu.sh; exit; fi
@@ -80,7 +87,7 @@ case $opt in
                     continue
                 fi
 
-                groupmod "${arg[$i]}" "${options[$i]}" "${group}" >>"$LOG_FILE" 2>&1
+                run_admin_command "modify_group" "$group" groupmod "${arg[$i]}" "${options[$i]}" "${group}"
                 if [ $i -eq 2 ]; then group=${options[$i]}; fi
 				
 				if [ $i -eq 1 ]; then check=$(getent group "${group}" | cut -d ":" -f3)
@@ -88,7 +95,9 @@ case $opt in
 				elif [ $i -eq 3 ]; then check=$(getent group "${group}" | cut -d ":" -f4)
 				fi
 				
-				if [ "${check}" == "${options[$i]}" ];then
+				if is_dry_run; then
+                    output="${output}\nDry run: Option ${i} was previewed (${arg[$i]} ${options[$i]})."
+                elif [ "${check}" == "${options[$i]}" ];then
                     output="${output}\nOption ${i} has been modified successfully (${arg[$i]} ${options[$i]})."
                 else output="${output}\nOption ${i} has not been modified (${arg[$i]} ${options[$i]})."; fi
             fi
@@ -134,6 +143,10 @@ case $opt in
         source ./modgrp-menu.sh; exit ;;
 ########################################################################################################################
     "Users")        # Option 3
+        if ! command_supports_option groupmod "-U"; then
+            whiptail --title "Unsupported Option" --msgbox "This system's groupmod command does not support the -U users option." 8 79
+            source ./modgrp-menu.sh; exit
+        fi
         if [ "${options[3]}" == "-" ]; then options[3]="${defaults[3]}"; fi
         while true; do
             options[3]=$(whiptail --inputbox "Enter the group users (Comma Separated):" 8 $(( $COLUMNS - 10 )) "${options[3]}" \

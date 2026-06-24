@@ -98,9 +98,9 @@ case $opt in
         done
 
         command_args+=("${username}")
-        "${command_args[@]}" >>"$LOG_FILE" 2>&1
+        run_admin_command "create_user" "$username" "${command_args[@]}"
 
-        if user_exists "${username}"; then
+        if user_exists "${username}" || is_dry_run; then
             check="${username}"
         else
             check=""
@@ -110,7 +110,9 @@ case $opt in
             set_user_password "${username}" "${options[10]}"
         fi
         
-        if [ "${check}" ];then
+        if is_dry_run; then
+            output="Dry run: User ($username) creation was previewed."
+        elif [ "${check}" ];then
             output="User ($username) has been created successfully."
         else output="User ($username) has not been created."; fi
         whiptail --title "Output" --msgbox "${output}" 8 79

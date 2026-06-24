@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-LOG_FILE="${SAH_LOG_FILE:-$SCRIPT_DIR/logs}"
+LOG_DIR="${SAH_LOG_DIR:-$SCRIPT_DIR/logs}"
+LOG_FILE="${SAH_LOG_FILE:-$LOG_DIR/commands.log}"
+AUDIT_LOG_FILE="${SAH_AUDIT_LOG_FILE:-$LOG_DIR/audit.log}"
+BACKUP_DIR="${SAH_BACKUP_DIR:-$LOG_DIR/backups}"
 
 resize_window() {
 	if command -v resize >/dev/null 2>&1; then
@@ -48,17 +51,6 @@ gid_exists() {
 	getent group | awk -F: -v gid="$1" '$3 == gid { found = 1 } END { exit !found }'
 }
 
-set_user_password() {
-	local username=$1
-	local password=$2
-
-	if passwd --help 2>&1 | grep -q -- '--stdin'; then
-		printf '%s\n' "$password" | passwd "$username" --stdin >>"$LOG_FILE" 2>&1
-	else
-		printf '%s:%s\n' "$username" "$password" | chpasswd >>"$LOG_FILE" 2>&1
-	fi
-}
-
 function isValidUsername {
 	local re='^[[:lower:]_][[:lower:][:digit:]_-]{1,15}$'
 	(( ${#1} > 16 )) && return 1
@@ -80,3 +72,6 @@ function isValidGroups {
 	local re='^[[:alnum:]]+([[:alnum:]\,]*[[:alnum:]]+)?$'
 	[[ $1 =~ $re ]]
 }
+
+# shellcheck source=lib/admin-actions.sh
+source "$SCRIPT_DIR/lib/admin-actions.sh"
