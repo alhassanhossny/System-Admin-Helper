@@ -47,6 +47,13 @@ sudo zypper install newt xterm shadow
 
 ## Usage
 
+Update an existing clone before running:
+
+```bash
+git pull
+sudo make install
+```
+
 From the repository root:
 
 ```bash
@@ -86,6 +93,31 @@ Override locations if needed:
 sudo SAH_LOG_DIR=/var/log/system-admin-helper ./scripts/main.sh
 ```
 
+### Legacy Logs File Migration
+
+Older versions wrote command output directly to a regular file named `scripts/logs`. Current versions use `scripts/logs/` as a directory.
+
+If an old `scripts/logs` file exists, startup now migrates it automatically to:
+
+```text
+scripts/logs/legacy-commands.log
+```
+
+Then it creates:
+
+```text
+scripts/logs/commands.log
+scripts/logs/audit.log
+scripts/logs/backups/
+```
+
+This fixes the Linux Mint error:
+
+```text
+mkdir: cannot create directory '.../scripts/logs': File exists
+mkdir: cannot create directory '.../scripts/logs': Not a directory
+```
+
 ## Backups And Restore
 
 Before destructive delete actions, the app prompts to back up:
@@ -113,6 +145,12 @@ Install a system launcher:
 
 ```bash
 sudo make install
+```
+
+Run the installed launcher:
+
+```bash
+sudo system-admin-helper
 ```
 
 Default paths:
