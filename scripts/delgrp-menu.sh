@@ -2,6 +2,8 @@
 #
 # Delete Group Option
 
+source ./func.sh
+
 while true; do
     group=$(whiptail --inputbox "Enter the group:" 8 39 "${group}" \
     --title "Delete Group" 3>&1 1>&2 2>&3)
@@ -11,7 +13,7 @@ while true; do
         whiptail --title "Error" --msgbox "Empty group name, try again." 8 78
         continue
     else
-        if [ "$(getent group ${group} | cut -d ":" -f1 | grep ${group})" ]; then        # If not exist ask to enter again.
+        if group_exists "${group}"; then        # If not exist ask to enter again.
             break
         else
             whiptail --title "Error" --msgbox "Group (${group}) does not exist, try another." 8 78
@@ -28,10 +30,9 @@ if ! (whiptail --title "Delete Group (${group})" --yesno "Again, Are you sure yo
     ./main-menu.sh; exit
 fi
 
-groupdel ${group} &>>./logs
+groupdel "${group}" >>"$LOG_FILE" 2>&1
 
-check=$(getent group ${group} | cut -d ":" -f1 | grep ${group})
-if [ "${check}" ]; then
+if group_exists "${group}"; then
     output="Group ($group) has not been deleted, make sure that this group is not the primary group of any user."
 else output="Group ($group) has been deleted successfully."; fi
 whiptail --title "Output" --msgbox "${output}" 8 79

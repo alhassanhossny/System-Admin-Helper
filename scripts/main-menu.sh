@@ -1,9 +1,10 @@
-#/bin/bash
+#!/usr/bin/env bash
 #
 # First menu in the program with all the main options Add/Modify/Delete/List
 
 
-eval `resize`
+source ./func.sh
+resize_window
 command=$(whiptail --title "Main Menu" --cancel-button "Exit" --ok-button "Select" \
 --menu "Choose an option" \
 $LINES $COLUMNS $(( $LINES - 8 )) \

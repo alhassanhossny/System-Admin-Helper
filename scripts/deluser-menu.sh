@@ -2,7 +2,8 @@
 #
 # Delete User Option
 
-eval `resize`
+source ./func.sh
+resize_window
 
 while true; do
     username=$(whiptail --inputbox "Enter the username:" 8 39 "${username}" \
@@ -13,7 +14,7 @@ while true; do
         whiptail --title "Error" --msgbox "Empty username, try again." 8 78
         continue
     else
-        if [ "$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})" ]; then        # If not exist ask to enter again.
+        if user_exists "${username}"; then        # If not exist ask to enter again.
             break
         else
             whiptail --title "Error" --msgbox "Username (${username}) does not exist, try another." 8 78
@@ -32,12 +33,12 @@ $(( $LINES - 2 )) 80 $(( $LINES - 8 )) \
  
  if [ $? != 0 ]; then ./main-menu.sh; exit; fi
  
- args=""
+ command_args=(userdel)
  for opt in ${options}; do
     case ${opt} in
-        "Remove") args="${args} -r" ;;
-        "Force") args="${args} -f" ;;
-        "SELinux") args="${args} -Z" ;;
+        "Remove") command_args+=("-r") ;;
+        "Force") command_args+=("-f") ;;
+        "SELinux") command_args+=("-Z") ;;
     esac
  done
  
@@ -49,10 +50,10 @@ if ! (whiptail --title "Delete User (${username})" --yesno "Again, Are you sure 
     ./main-menu.sh; exit
 fi
 
-eval "$(echo userdel ${args} ${username} | tr -d \')" &>>./logs
+command_args+=("${username}")
+"${command_args[@]}" >>"$LOG_FILE" 2>&1
 
-check=$(getent passwd ${username} | cut -d ":" -f1 | grep "${username}")
-if [ "${check}" ]; then
+if user_exists "${username}"; then
     output="User ($username) has not been deleted."
 else output="User ($username) has been deleted successfully."; fi
 whiptail --title "Output" --msgbox "${output}" 8 79

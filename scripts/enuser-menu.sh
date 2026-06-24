@@ -2,6 +2,8 @@
 #
 # Enable User Option
 
+source ./func.sh
+
 while true; do
     username=$(whiptail --inputbox "Enter the username:" 8 39 "${username}" \
     --title "Enable User" 3>&1 1>&2 2>&3)
@@ -11,7 +13,7 @@ while true; do
         whiptail --title "Error" --msgbox "Empty username, try again." 8 78
         continue
     else
-        if [ "$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})" ]; then        # If not exist ask to enter again.
+        if user_exists "${username}"; then        # If not exist ask to enter again.
             break
         else
             whiptail --title "Error" --msgbox "Username (${username}) does not exist, try another." 8 78
@@ -24,11 +26,11 @@ if ! (whiptail --title "Enable User (${username})" --yesno "Are you sure you wan
     ./main-menu.sh; exit
 fi
 
-usermod -U ${username} &>>./logs
-usermod -e -1 ${username} &>>./logs
+usermod -U "${username}" >>"$LOG_FILE" 2>&1
+usermod -e -1 "${username}" >>"$LOG_FILE" 2>&1
 
-check1=$(chage -l ${username} | grep 'Account expires' | grep "never")
-check2=$(passwd --status ${username} | awk '{if ($2 == "LK") {print "locked"}}')
+check1=$(chage -l "${username}" | grep 'Account expires' | grep "never")
+check2=$(passwd --status "${username}" | awk '{if ($2 == "LK") {print "locked"}}')
 
 if [ "${check1}" ]; then
     output="User ($username) account has been enabled successfully."

@@ -3,7 +3,7 @@
 # Modify Group Option
 
 source ./func.sh    # Import useful functions
-eval `resize`               # Used to make the menu size full screen.
+resize_window               # Used to make the menu size full screen.
 
 if [ -z "${group}" ]; then
     while true; do
@@ -15,7 +15,7 @@ if [ -z "${group}" ]; then
             whiptail --title "Error" --msgbox "Empty group name, try again." 8 78
             continue
         else
-            if [ $(getent group ${group} | cut -d ":" -f1 | grep ${group}) ]; then        # If not exist ask to enter again.
+            if group_exists "${group}"; then        # If not exist ask to enter again.
                 break
             else
                 whiptail --title "Error" --msgbox "Group (${group}) does not exist, try another." 8 78
@@ -64,23 +64,28 @@ if [ -z "${defaults}" ]; then
     declare -a defaults
     defaults=(\
     "" \
-    $(getent group ${group} | cut -d ":" -f3) \
-    $(getent group ${group} | cut -d ":" -f1) \
-    $(getent group ${group} | cut -d ":" -f4) \
+    "$(getent group "${group}" | cut -d ":" -f3)" \
+    "$(getent group "${group}" | cut -d ":" -f1)" \
+    "$(getent group "${group}" | cut -d ":" -f4)" \
     )
 fi
 
 case $opt in
 ########################################################################################################################
     "Modify")        # Option 0
+        output=""
         for i in "${!options[@]}"; do
             if [ "${options[$i]}" != "-" ]; then
-                eval "$(echo groupmod ${arg[$i]} ${options[$i]} ${group} | tr -d \')" &>>./logs
+                if [ "$i" -eq 0 ]; then
+                    continue
+                fi
+
+                groupmod "${arg[$i]}" "${options[$i]}" "${group}" >>"$LOG_FILE" 2>&1
                 if [ $i -eq 2 ]; then group=${options[$i]}; fi
 				
-				if [ $i -eq 1 ]; then check=$(getent group ${group} | cut -d ":" -f3)
-				elif [ $i -eq 2 ]; then check=$(getent group ${group} | cut -d ":" -f1)
-				elif [ $i -eq 3 ]; then check=$(getent group ${group} | cut -d ":" -f4)
+				if [ $i -eq 1 ]; then check=$(getent group "${group}" | cut -d ":" -f3)
+				elif [ $i -eq 2 ]; then check=$(getent group "${group}" | cut -d ":" -f1)
+				elif [ $i -eq 3 ]; then check=$(getent group "${group}" | cut -d ":" -f4)
 				fi
 				
 				if [ "${check}" == "${options[$i]}" ];then
@@ -99,7 +104,7 @@ case $opt in
             --title "Modify Group Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
 			if [ $? != 0 ]; then options[1]="-"; source ./modgrp-menu.sh; exit; fi
             if [ "${options[1]}" == "${defaults[1]}" ]; then options[1]="-"; break; fi
-            if ! [ $(getent group ${options[1]} | cut -d ":" -f3 | grep ${options[1]}) ]; then break
+            if ! gid_exists "${options[1]}"; then break
             else
                 whiptail --title "Error" --msgbox "The GID is already existing, try again." 8 79
                 continue
@@ -114,7 +119,7 @@ case $opt in
             --title "Modify Group Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
 			if [ $? != 0 ]; then options[2]="-"; source ./modgrp-menu.sh; exit; fi
             if [ "${options[2]}" == "${defaults[2]}" ]; then options[2]="-"; break; fi
-            if [ $(getent group ${options[2]} | cut -d ":" -f1 | grep "${options[2]}") ]; then        # If exist ask to enter again.
+            if group_exists "${options[2]}"; then        # If exist ask to enter again.
                 whiptail --title "Error" --msgbox "Group (${options[2]}) is existing, try another." 8 78
                 continue
             else
@@ -136,7 +141,7 @@ case $opt in
 			if [ $? != 0 ]; then options[3]="-"; source ./modgrp-menu.sh; exit; fi
             if isValidGroups "${options[3]}"; then
                 for user in $(echo "${options[3]}" | tr "," " "); do
-                    if ! [ $(getent passwd ${user} | cut -d ":" -f1 | grep ${user}) ]; then
+                    if ! user_exists "${user}"; then
                         whiptail --title "Error" --msgbox "The (${user}) user does not exist, try again." 8 79
                         continue 2
                     fi

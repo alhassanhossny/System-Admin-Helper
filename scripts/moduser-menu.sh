@@ -3,7 +3,7 @@
 # Modify User Option
 
 source ./func.sh    # Import useful functions
-eval `resize`               # Used to make the menu size full screen.
+resize_window               # Used to make the menu size full screen.
 
 if [ -z "${username}" ]; then
     while true; do
@@ -15,7 +15,7 @@ if [ -z "${username}" ]; then
         whiptail --title "Error" --msgbox "Empty username, try again." 8 78
         continue
     else
-        if [ "$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})" ]; then        # If not exist ask to enter again.
+        if user_exists "${username}"; then        # If not exist ask to enter again.
             break
         else
             whiptail --title "Error" --msgbox "Username (${username}) does not exist, try another." 8 78
@@ -80,54 +80,60 @@ if [ $? != 0 ]; then ./main-menu.sh; exit; fi
 declare -a arg
 arg=("" -c -d -e -f -g -G -l -L -U -m -u "" -s)
 
-check=$(getent passwd ${username} | cut -d ":" -f1 | grep "${username}")
+if user_exists "${username}"; then
+    check="${username}"
+else
+    check=""
+fi
 
 if [ -z "${defaults}" ]; then
     declare -a defaults
     defaults=(\
     "" \
-    "$(getent passwd ${username} | cut -d ":" -f5)" \
-    "$(getent passwd ${username} | cut -d ":" -f6)" \
+    "$(getent passwd "${username}" | cut -d ":" -f5)" \
+    "$(getent passwd "${username}" | cut -d ":" -f6)" \
     "" \
     "" \
-    "$(getent passwd ${username} | cut -d ":" -f4)" \
+    "$(getent passwd "${username}" | cut -d ":" -f4)" \
     "$(id -nG ${username} | tr " " ",")" \
-    "$(getent passwd ${username} | cut -d ":" -f1)" \
+    "$(getent passwd "${username}" | cut -d ":" -f1)" \
     "" \
     "" \
-    "$(getent passwd ${username} | cut -d ":" -f6)" \
-    "$(getent passwd ${username} | cut -d ":" -f3)" \
+    "$(getent passwd "${username}" | cut -d ":" -f6)" \
+    "$(getent passwd "${username}" | cut -d ":" -f3)" \
     "" \
-    "$(getent passwd ${username} | cut -d ":" -f7)" \
+    "$(getent passwd "${username}" | cut -d ":" -f7)" \
     )
 fi
 
 case $opt in
 ########################################################################################################################
     "Modify")        # Option 0
-        args=""
+        command_args=(usermod)
         for i in "${!options[@]}"; do
             if [ "${options[$i]}" != "-" ]; then
-                if [ $i -ne 1 -a $i -ne 2 -a $i -ne 7 -a $i -ne 8 -a $i -ne 9 -a $i -ne 10 -a $i -ne 12 -a $i -ne 13 ];
-                    then args="${args} ${arg[$i]} ${options[$i]}"
-                elif [ $i -eq 1 -o $i -eq 2 -o $i -eq 10 -o $i -eq 13 ];
-                    then args="${args} ${arg[$i]} \"${options[$i]}\""
-                elif [ $i -eq 8 -o $i -eq 9 ];
-                    then args="${args} ${arg[$i]}"
-                fi
+                case $i in
+                    0|7|12) ;;
+                    8|9) command_args+=("${arg[$i]}") ;;
+                    10) command_args+=("-m" "-d" "${options[$i]}") ;;
+                    *) command_args+=("${arg[$i]}" "${options[$i]}") ;;
+                esac
             fi
         done
-		
-        if [ -n "${args}" -a "${check}" ];then
-            eval "$(echo usermod ${args} ${username} | tr -d \')" &>>./logs; fi
-        if [ "${options[12]}" != "-" -a "${check}"  ]; then
-            echo "${options[12]}" | passwd ${username} --stdin &>>./logs; fi
-        if [ "${options[7]}" != "-" -a "${check}" ];then
-            eval "usermod ${arg[7]} ${options[7]} ${username}"
+
+        if [ ${#command_args[@]} -gt 1 ] && [ "${check}" ]; then
+            command_args+=("${username}")
+            "${command_args[@]}" >>"$LOG_FILE" 2>&1
+        fi
+        if [ "${options[12]}" != "-" ] && [ "${check}" ]; then
+            set_user_password "${username}" "${options[12]}"
+        fi
+        if [ "${options[7]}" != "-" ] && [ "${check}" ]; then
+            usermod "${arg[7]}" "${options[7]}" "${username}" >>"$LOG_FILE" 2>&1
             username="${options[7]}"
-            check=$(getent passwd ${username} | cut -d ":" -f1 | grep "${username}"); fi
-		
-        if [ "${check}" ]; then
+        fi
+
+        if user_exists "${username}"; then
             output="NOT SURE: User ($username) has been modified successfully."
         else output="NOT SURE: User ($username) has not been modified." ; fi
         whiptail --title "Output" --msgbox "${output}" 8 79
@@ -189,7 +195,7 @@ case $opt in
             options[5]=$(whiptail --inputbox "Enter the new GID:" 8 39 "${options[5]}" \
             --title "Modify User Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
             if [ $? != 0 ]; then options[5]="-"; source ./moduser-menu.sh; exit; fi
-            if [ "$(getent group ${options[5]} | cut -d ":" -f3 | grep ${options[5]})" ]; then break
+            if gid_exists "${options[5]}"; then break
             else
                 whiptail --title "Error" --msgbox "The GID (${options[5]}) does not exist, try again." 8 79
                 continue
@@ -205,7 +211,7 @@ case $opt in
             if [ $? != 0 ]; then options[6]="-"; source ./moduser-menu.sh; exit; fi
             if isValidGroups "${options[6]}"; then
                 for grp in $(echo "${options[6]}" | tr "," " "); do
-                    if [ ! "$(getent group ${grp} | cut -d ":" -f1 | grep ${grp})" ]; then
+                    if ! group_exists "${grp}"; then
                         whiptail --title "Error" --msgbox "The (${grp}) group does not exist, try again." 8 79
                         continue 2
                     fi
@@ -224,7 +230,7 @@ case $opt in
             options[7]=$(whiptail --inputbox "Enter the new login username:" 8 39 "${options[7]}" \
             --title "Modify User Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
 			if [ $? != 0 -o "${options[7]}" == "${defaults[7]}" ]; then options[7]="-"; source ./moduser-menu.sh; exit; fi
-            if [ "$(getent passwd ${options[7]} | cut -d ":" -f1 | grep ${options[7]})" ]; then        # If exist ask to enter again.
+            if user_exists "${options[7]}"; then        # If exist ask to enter again.
                 whiptail --title "Error" --msgbox "Username (${options[7]}) is existing, try another." 8 78
                 continue
             else
@@ -276,7 +282,7 @@ case $opt in
             options[11]=$(whiptail --inputbox "Enter the new UID:" 9 39 "${options[11]}" \
             --title "Modify User Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
 			if [ $? != 0 -o "${options[11]}" == "${defaults[11]}" ]; then options[11]="-"; source ./moduser-menu.sh; exit; fi
-            if [ ! "$(getent passwd ${options[11]} | cut -d ":" -f3 | grep ${options[11]})" ]; then break
+            if ! uid_exists "${options[11]}"; then break
             else
                 whiptail --title "Error" --msgbox "The UID is already existing, try again." 8 79
                 continue

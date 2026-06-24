@@ -3,7 +3,7 @@
 # Add Group Option
 
 source ./func.sh	# Import useful functions
-eval `resize`   # Used to make the menu size full screen.
+resize_window   # Used to make the menu size full screen.
 
 if [ -z "${group}" ]; then
 	while true; do
@@ -15,7 +15,7 @@ if [ -z "${group}" ]; then
             whiptail --title "Error" --msgbox "Empty group name, try again." 8 78
             continue
 		else
-			if [ "$(getent group ${group} | cut -d ":" -f1 | grep ${group})" ]; then		# If exist ask to enter again.
+			if group_exists "${group}"; then		# If exist ask to enter again.
 				whiptail --title "Error" --msgbox "Duplicated group, try another." 8 78
 				continue
 			else
@@ -66,16 +66,21 @@ arg=("" -g -U)
 case $opt in
 ########################################################################################################################
 	"Create")	# Option 0
-		args=""
+		command_args=(groupadd)
 		for i in "${!options[@]}"; do
 			if [ "${options[$i]}" != "-" ]; then
-				args="${args} ${arg[$i]} ${options[$i]}"
+				command_args+=("${arg[$i]}" "${options[$i]}")
 			fi
 		done
-		
-		eval "groupadd ${args} ${group}" &>>./logs
-		
-		check=$(getent group ${group} | cut -d ":" -f1 | grep ${group})
+
+		command_args+=("${group}")
+		"${command_args[@]}" >>"$LOG_FILE" 2>&1
+
+		if group_exists "${group}"; then
+			check="${group}"
+		else
+			check=""
+		fi
 		if [ "${check}" ];then
 			output="Group ($group) has been created successfully."
 		else output="Group ($group) has not been created."; fi
@@ -88,7 +93,7 @@ case $opt in
 			options[1]=$(whiptail --inputbox "Enter the new GID:" 9 39 "${options[1]}" \
 			--title "New Group Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
 			if [ $? != 0 ]; then options[1]="-"; break; fi
-			if [ ! "$(getent group ${options[1]} | cut -d ":" -f3 | grep ${options[1]})" ]; then break;
+			if ! gid_exists "${options[1]}"; then break;
 			else
 				whiptail --title "Error" --msgbox "The GID is unvalid or exist already, try again." 8 79
 				continue
@@ -104,7 +109,7 @@ case $opt in
 			if [ $? != 0 ]; then options[2]="-"; break; fi
 			if isValidGroups "${options[2]}"; then
 				for user in $(echo "${options[2]}" | tr "," " "); do
-					if ! [ $(getent passwd ${user} | cut -d ":" -f1 | grep ${user}) ]; then
+					if ! user_exists "${user}"; then
 						whiptail --title "Error" --msgbox "The (${user}) user does not exist, try again." 8 79
 						continue 2
 					fi

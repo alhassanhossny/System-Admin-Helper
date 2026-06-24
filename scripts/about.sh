@@ -1,6 +1,7 @@
 #!/bin/bash
 
-eval `resize`   
+source ./func.sh
+resize_window
 
 about="
 ******************************** Admin helper Bash Script Project **********************************

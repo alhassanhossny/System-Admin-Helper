@@ -1,30 +1,73 @@
 # System Admin Helper
 
-System Admin Helper is a Bash Program for dealing with Linux Administration commands with a friendly way.
+System Admin Helper is a Bash/whiptail menu application for common Linux user and group administration tasks.
 
-## Important Package to view menues and resize them.
+## Features
 
-    $ dnf -qy install newt            # Provides (whiptail)
-    $ dnf -qy install xterm-resize    # Provides (resize)
+- Add, modify, delete, list, enable, and disable users.
+- Add, modify, delete, and list groups.
+- Change user passwords.
+- Root/dependency checks before privileged actions run.
+- Portable launcher that works from the repository root or from the `scripts/` directory.
+- Logs command output to `scripts/logs` during local runs.
+
+## Requirements
+
+Run on a Linux system with root privileges and the standard shadow user-management tools.
+
+Fedora/RHEL:
+
+```bash
+sudo dnf install newt xterm-resize shadow-utils
+```
+
+Debian/Ubuntu:
+
+```bash
+sudo apt-get install whiptail xterm passwd login
+```
+
+openSUSE:
+
+```bash
+sudo zypper install newt xterm shadow
+```
+
+`resize` is optional. If it is unavailable, the app falls back to the terminal dimensions reported by `tput`.
 
 ## Usage
 
-1- Open Scripts folder in terminal and run :
+From the repository root:
 
-    $ sudo su  
-### or
-    $ su -                            # to get the root permission.
+```bash
+sudo ./scripts/main.sh
+```
 
-2- run :
+Or from the scripts directory:
 
-    $ chmod +x *.sh                   
-### to make all bash files excutable.
-    
-3- run :
+```bash
+cd scripts
+sudo ./main.sh
+```
 
-    $ ./main.sh  
-### or 
-    $ bash main.sh    
-### to Run the program.
-    
-# Enjoy your experience .
+The launcher validates privileges and dependencies before opening the main menu. It no longer installs packages automatically.
+
+## Development Checks
+
+Run Bash syntax checks:
+
+```bash
+for file in scripts/*.sh; do bash -n "$file" || exit 1; done
+```
+
+Run a non-root smoke test:
+
+```bash
+bash scripts/main.sh
+```
+
+Expected result:
+
+```text
+Privileges Error!: Error! Please run as root user.
+```

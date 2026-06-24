@@ -2,6 +2,8 @@
 #
 # Change Password Option
 
+source ./func.sh
+
 while true; do
     username=$(whiptail --inputbox "Enter the username:" 8 39 "${username}" \
     --title "Change Password" 3>&1 1>&2 2>&3)
@@ -11,7 +13,7 @@ while true; do
         whiptail --title "Error" --msgbox "Empty username, try again." 8 78
         continue
     else
-        if [ "$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})" ]; then        # If not exist ask to enter again.
+        if user_exists "${username}"; then        # If not exist ask to enter again.
             break
         else
             whiptail --title "Error" --msgbox "Username (${username}) does not exist, try another." 8 78
@@ -36,10 +38,10 @@ while true; do
         continue; fi
 done
 
-echo "${pass1}" | passwd ${username} --stdin &>>./logs
+set_user_password "${username}" "${pass1}"
 
-lstchg=$(getent shadow ${username} | cut -d ":" -f3)
-now=$((($(date +%s -d $(date '+%Y%m%d'))-$(date +%s -d 19700101))/86400))
+lstchg=$(getent shadow "${username}" | cut -d ":" -f3)
+now=$((($(date +%s -d "$(date '+%Y%m%d')")-$(date +%s -d 19700101))/86400))
 
 if [ "${now}" == "${lstchg}" ]; then
     output="Password of user ($username) has been changed successfully."

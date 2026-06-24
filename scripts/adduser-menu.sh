@@ -3,7 +3,7 @@
 # Add User Option
 
 source ./func.sh    # Import useful functions
-eval `resize`   # Used to make the menu size full screen.
+resize_window   # Used to make the menu size full screen.
 
 if [ -z "${username}" ]; then
     while true; do
@@ -15,7 +15,7 @@ if [ -z "${username}" ]; then
             whiptail --title "Error" --msgbox "Empty username, try again." 8 78
             continue
         else
-            if [ "$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})" ]; then        # If exist ask to enter again.
+            if user_exists "${username}"; then        # If exist ask to enter again.
                 whiptail --title "Error" --msgbox "Duplicated username, try another." 8 78
                 continue
             else
@@ -84,24 +84,31 @@ arg=("" -c -M -d -mk -e -f -g -G -u "" -s)
 case $opt in
 ########################################################################################################################
     "Create")    # Option 0
-        args=""
+        command_args=(useradd)
         for i in "${!options[@]}"; do
             if [ "${options[$i]}" != "-" ]; then
                 if [ $i -ne 1 -a $i -ne 2 -a $i -ne 3 -a $i -ne 4 -a $i -ne 10 -a $i -ne 11 ];
-                    then args="${args} ${arg[$i]} ${options[$i]}"
+                    then command_args+=("${arg[$i]}" "${options[$i]}")
                 elif [ $i -eq 1 -o $i -eq 3 -o $i -eq 4 -o $i -eq 11 ];
-                    then args="${args} ${arg[$i]} \"${options[$i]}\""
+                    then command_args+=("${arg[$i]}" "${options[$i]}")
                 elif [[ $i =~ 2 ]];
-                    then args="${args} ${arg[$i]}"
+                    then command_args+=("${arg[$i]}")
                 fi
             fi
         done
-		
-        eval "$(echo useradd ${args} ${username} | tr -d \')" &>>./logs
-		
-        check=$(getent passwd ${username} | cut -d ":" -f1 | grep ${username})
-        if [ "${check}" -a "${options[10]}" != "-" ];
-            then echo "${options[10]}" | passwd ${username} --stdin &>>./logs; fi
+
+        command_args+=("${username}")
+        "${command_args[@]}" >>"$LOG_FILE" 2>&1
+
+        if user_exists "${username}"; then
+            check="${username}"
+        else
+            check=""
+        fi
+
+        if [ "${check}" ] && [ "${options[10]}" != "-" ]; then
+            set_user_password "${username}" "${options[10]}"
+        fi
         
         if [ "${check}" ];then
             output="User ($username) has been created successfully."
@@ -192,7 +199,7 @@ case $opt in
             options[7]=$(whiptail --inputbox "Enter the GID:" 8 39 "${options[7]}" \
             --title "New User Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
             if [ $? != 0 -o -z "${options[7]}" ]; then options[7]="-"; break; fi
-            if [ $(getent group ${options[7]} | cut -d ":" -f3 | grep ${options[7]}) ]; then break
+            if gid_exists "${options[7]}"; then break
             else
                 whiptail --title "Error" --msgbox "The GID does not exist, try again." 8 79
                 continue
@@ -208,7 +215,7 @@ case $opt in
             if [ $? !=  0 ]; then options[8]="-"; break; fi
             if isValidGroups "${options[8]}"; then
                 for grp in $(echo "${options[8]}" | tr "," " "); do
-                    if [ ! "$(getent group ${grp} | cut -d ":" -f1 | grep ${grp})" ]; then
+                    if ! group_exists "${grp}"; then
                         whiptail --title "Error" --msgbox "The (${grp}) group does not exist, try again." 8 79
                         continue 2
                     fi
@@ -227,7 +234,7 @@ case $opt in
             options[9]=$(whiptail --inputbox "Enter the new UID:" 9 39 "${options[9]}" \
             --title "New User Options" --cancel-button "disable" 3>&1 1>&2 2>&3)
              if [ $? != 0 -o -z "${options[9]}" ]; then options[9]="-"; break; fi
-            if [ ! "$(getent passwd ${options[9]} | cut -d ":" -f3 | grep ${options[9]})" ]; then break;
+            if ! uid_exists "${options[9]}"; then break;
             else
                 whiptail --title "Error" --msgbox "The UID is unvalid or exist already, try again." 8 79
                 continue
