@@ -15,3 +15,8 @@
 	run bash -c 'export SAH_LOG_DIR="$1"; source scripts/func.sh; run_admin_command test_action target true' _ "$BATS_TEST_TMPDIR/logs"
 	[ "$status" -eq 130 ]
 }
+
+@test "legacy logs file is migrated to a log directory" {
+	run bash -c 'export SAH_LOG_DIR="$1/logs"; printf legacy > "$SAH_LOG_DIR"; source scripts/func.sh; prepare_runtime_paths; test -d "$SAH_LOG_DIR"; test -f "$SAH_LOG_DIR/legacy-commands.log"' _ "$BATS_TEST_TMPDIR"
+	[ "$status" -eq 0 ]
+}

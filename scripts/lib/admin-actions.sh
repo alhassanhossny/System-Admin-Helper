@@ -22,6 +22,31 @@ format_command() {
 	printf '%s' "${output% }"
 }
 
+prepare_runtime_paths() {
+	local legacy_path
+	local migrated_path
+	local timestamp
+
+	timestamp=$(date +%Y%m%d-%H%M%S)
+
+	if [ -e "$LOG_DIR" ] && [ ! -d "$LOG_DIR" ]; then
+		legacy_path="$LOG_DIR"
+		migrated_path="${LOG_DIR}.legacy-${timestamp}"
+		mv "$legacy_path" "$migrated_path" || return 1
+		mkdir -p "$LOG_DIR" || return 1
+		mv "$migrated_path" "$LOG_DIR/legacy-commands.log" || return 1
+	fi
+
+	if [ -e "$BACKUP_DIR" ] && [ ! -d "$BACKUP_DIR" ]; then
+		legacy_path="$BACKUP_DIR"
+		migrated_path="${BACKUP_DIR}.legacy-${timestamp}"
+		mv "$legacy_path" "$migrated_path" || return 1
+	fi
+
+	mkdir -p "$LOG_DIR" "$BACKUP_DIR" || return 1
+	touch "$LOG_FILE" "$AUDIT_LOG_FILE" || return 1
+}
+
 audit_log() {
 	local action=$1
 	local target=$2

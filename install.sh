@@ -8,8 +8,13 @@ BINDIR=${SAH_BINDIR:-"$PREFIX/sbin"}
 SOURCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 install -d "$LIBDIR" "$BINDIR"
-cp -R "$SOURCE_DIR/scripts" "$LIBDIR/"
+install -d "$LIBDIR/scripts"
+tar --exclude='./logs' --exclude='./logs/*' -C "$SOURCE_DIR/scripts" -cf - . | tar -C "$LIBDIR/scripts" -xf -
 find "$LIBDIR/scripts" -type f -name '*.sh' -exec chmod 755 {} +
+
+if [ -e "$LIBDIR/scripts/logs" ] && [ ! -d "$LIBDIR/scripts/logs" ]; then
+	mv "$LIBDIR/scripts/logs" "$LIBDIR/scripts/logs.legacy-$(date +%Y%m%d-%H%M%S)"
+fi
 
 cat >"$BINDIR/system-admin-helper" <<EOF
 #!/usr/bin/env bash

@@ -56,11 +56,10 @@ $(install_hint)"
 	exit 1
 fi
 
-mkdir -p "$LOG_DIR" "$BACKUP_DIR"
-touch "$LOG_FILE" "$AUDIT_LOG_FILE" 2>/dev/null || {
-	show_message "Log Error" "Unable to write log file: $LOG_FILE"
+if ! prepare_runtime_paths 2>/dev/null; then
+	show_message "Log Error" "Unable to prepare runtime log directory: $LOG_DIR"
 	exit 1
-}
+fi
 
 resize_window
 
